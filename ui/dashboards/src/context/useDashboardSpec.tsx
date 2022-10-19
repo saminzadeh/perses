@@ -12,23 +12,49 @@
 // limitations under the License.
 
 import { DashboardSpec, GridDefinition } from '@perses-dev/core';
+import { useRef, useEffect, useMemo } from 'react';
 import { PanelGroupDefinition, useDashboardStore } from './DashboardProvider';
-import { useTemplateVariableDefinitions } from './TemplateVariableProvider';
-
-export function useDashboardSpec(): DashboardSpec {
-  const { panels, panelGroups, defaultTimeRange } = useDashboardStore(({ panels, panelGroups, defaultTimeRange }) => ({
+import { useTemplateVariableActions, useTemplateVariableDefinitions } from './TemplateVariableProvider';
+export function useDashboardSpec() {
+  const {
     panels,
     panelGroups,
     defaultTimeRange,
+    reset: resetDashboardStore,
+  } = useDashboardStore(({ panels, panelGroups, defaultTimeRange, reset }) => ({
+    panels,
+    panelGroups,
+    defaultTimeRange,
+    reset,
   }));
+  const { setVariableDefinitions } = useTemplateVariableActions();
   const variables = useTemplateVariableDefinitions();
   const layouts = convertPanelGroupsToLayouts(panelGroups);
 
+  const previousSpecRef = useRef<DashboardSpec | null>();
+
+  const spec = useMemo(() => {
+    return { panels, layouts, variables, duration: defaultTimeRange.pastDuration };
+  }, [panels, layouts, variables, defaultTimeRange]);
+
+  // Keep track of the last spec so that we can reset the dashboard
+  useEffect(() => {
+    previousSpecRef.current = spec;
+  }, [spec]);
+
+  const previousSpec = previousSpecRef.current;
+
+  const reset = () => {
+    if (previousSpec?.variables) {
+      setVariableDefinitions(previousSpec?.variables);
+    }
+    resetDashboardStore();
+  };
+
   return {
-    panels,
-    layouts,
-    variables,
-    duration: defaultTimeRange.pastDuration,
+    reset,
+    spec,
+    previousSpec,
   };
 }
 

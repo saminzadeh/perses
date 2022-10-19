@@ -18,6 +18,7 @@ import AddPanelIcon from 'mdi-material-ui/ChartBoxPlusOutline';
 import { ErrorBoundary, ErrorAlert } from '@perses-dev/components';
 import { useDashboardActions, useEditMode } from '../context';
 import { TemplateVariableList, TimeRangeControls } from '../components';
+import { useDashboardSpec } from '../context/useDashboardSpec';
 
 export interface DashboardToolbarProps {
   dashboardName: string;
@@ -27,7 +28,8 @@ export const DashboardToolbar = (props: DashboardToolbarProps) => {
   const { dashboardName } = props;
 
   const { isEditMode, setEditMode } = useEditMode();
-  const { addPanelGroup, addPanel, reset, save } = useDashboardActions();
+  const { reset } = useDashboardSpec();
+  const { addPanelGroup, addPanel, save } = useDashboardActions();
   const isLaptopSize = useMediaQuery(useTheme().breakpoints.up('sm'));
 
   const onEditButtonClick = () => {
